@@ -64,13 +64,7 @@ func ParseMnemonic(s string) (Executer, error) {
 
 }
 
-func ParseAssemblyFile(path string) (Program, error) {
-	file, err := os.Open(path)
-	if err != nil {
-		return nil, err
-	}
-	defer file.Close()
-
+func ParseAssemblyFile(file *os.File) (Program, error) {
 	var program Program
 	scanner := bufio.NewScanner(file)
 	scanner.Split(bufio.ScanLines)
@@ -93,8 +87,17 @@ func ParseAssemblyFile(path string) (Program, error) {
 	return program, nil
 }
 
+func LoadAssemblyFile(path string) (Program, error) {
+	file, err := os.Open(path)
+	if err == nil {
+		defer file.Close()
+		return ParseAssemblyFile(file)
+	}
+	return nil, err
+}
+
 func RunAssemblyFile(path string) error {
-	program, err := ParseAssemblyFile(path)
+	program, err := LoadAssemblyFile(path)
 	if err == nil {
 		return RunProgram(program)
 	}
