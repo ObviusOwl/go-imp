@@ -2,11 +2,27 @@ package stack
 
 import "errors"
 
-type Stack interface {
+type Pusher interface {
 	Push(item interface{})
+}
+
+type Poper interface {
 	Pop() (interface{}, error)
-	Empty() bool
+}
+
+type Peeker interface {
 	Peek() (interface{}, error)
+}
+
+type EmptyChecker interface {
+	Empty() bool
+}
+
+type Stack interface {
+	Pusher
+	Poper
+	Peeker
+	EmptyChecker
 }
 
 type stack struct {
@@ -49,4 +65,18 @@ func (s *stack) Peek() (interface{}, error) {
 		return nil, errors.New("peek empty stack")
 	}
 	return s.items[s.tos], nil
+}
+
+// Process pops items from the stack for the processItem function to process
+// until either there is a pop error (ie. empty stack) or the function returns false
+func Process(st Poper, processItem func(int, interface{}) bool) error {
+	for itcount := 1; ; itcount++ {
+		item, err := st.Pop()
+		if err != nil {
+			return err
+		}
+		if doContinue := processItem(itcount, item); !doContinue {
+			return nil
+		}
+	}
 }

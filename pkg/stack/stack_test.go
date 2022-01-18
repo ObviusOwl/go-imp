@@ -113,6 +113,58 @@ func TestPop(t *testing.T) {
 
 }
 
+func TestProcess(t *testing.T) {
+	s := New()
+	s.Push(4)
+	s.Push(3)
+	s.Push(2)
+	s.Push(1)
+
+	expected := 1
+	Process(s, func(it int, item interface{}) bool {
+		value, ok := item.(int)
+		if !ok {
+			t.Fatalf("Failed to convert item %v to int", value)
+		}
+		if value != expected {
+			t.Fatalf("Expected value to be %d, but got %d", expected, value)
+		}
+		if it != expected {
+			t.Fatalf("Expected it to be %d, but got %d", expected, value)
+		}
+		expected++
+		return true
+	})
+
+	if !s.Empty() {
+		t.Fatalf("Expected stack to be empty, but it was not")
+	}
+	if expected != 5 {
+		t.Fatalf("Expected counter to be %d, but got %d", 4, expected)
+	}
+}
+
+func TestProcessPartial(t *testing.T) {
+	s := New()
+	s.Push(4)
+	s.Push(3)
+	s.Push(2)
+	s.Push(1)
+
+	expected := 1
+	Process(s, func(it int, item interface{}) bool {
+		expected++
+		return expected < 3
+	})
+
+	if len(s.items) != 2 {
+		t.Fatalf("Expected stack to have %d items, but got %d", 2, len(s.items))
+	}
+	if expected != 3 {
+		t.Fatalf("Expected counter to be %d, but got %d", 3, expected)
+	}
+}
+
 func TestEmpty(t *testing.T) {
 	cases := []struct {
 		name     string
