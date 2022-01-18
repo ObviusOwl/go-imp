@@ -29,7 +29,7 @@ func stackIntReduce(st stack.Stack, f func(int, int) (DataValue, error)) error {
 	var err error
 	operands, err := popInts(st, 2)
 	if err == nil {
-		result, err := f(operands[1], operands[0])
+		result, err := f(operands[0], operands[1])
 		if err == nil {
 			st.Push(result)
 		}
