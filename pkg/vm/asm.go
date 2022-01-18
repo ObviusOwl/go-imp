@@ -9,7 +9,7 @@ import (
 	"strings"
 )
 
-var opCodeReg = regexp.MustCompile(`^([a-zA-Z]+)(?:\s+([0-9]+))?$`)
+var opCodeReg = regexp.MustCompile(`^\s*([a-zA-Z]+)(?:\s+([0-9]+))?\s*$`)
 
 func coerceInt(s string) int {
 	i, _ := strconv.ParseInt(s, 10, 0)
