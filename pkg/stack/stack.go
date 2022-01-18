@@ -35,6 +35,17 @@ func New() *stack {
 	return &stack{tos: -1}
 }
 
+// New creates a new stack pushing in reverse order the given items
+// The topmost element will then be the last argument to this function.
+func NewWithItems(items ...interface{}) *stack {
+	s := New()
+
+	for i := len(items) - 1; i >= 0; i-- {
+		s.Push(items[i])
+	}
+	return s
+}
+
 // Push adds an element on the top of the stack
 func (s *stack) Push(item interface{}) {
 	s.items = append(s.items, item)
