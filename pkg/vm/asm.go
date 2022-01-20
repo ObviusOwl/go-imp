@@ -52,9 +52,9 @@ func ParseMnemonic(s string) (Executer, error) {
 	case "psh":
 		return PushInt(coerceInt(m[2])), nil
 	case "stm":
-		return Asg(coerceInt(m[2])), nil
+		return StoreMemory(coerceInt(m[2])), nil
 	case "ldm":
-		return Deref(coerceInt(m[2])), nil
+		return LoadMemory(coerceInt(m[2])), nil
 	case "out":
 		return Output(coerceInt(m[2])), nil
 

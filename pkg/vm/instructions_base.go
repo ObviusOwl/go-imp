@@ -112,9 +112,9 @@ func (inst PushInt) Exec(st stack.Stack, vm Machine) error {
 	return nil
 }
 
-type Asg int
+type StoreMemory int
 
-func (inst Asg) Exec(st stack.Stack, vm Machine) error {
+func (inst StoreMemory) Exec(st stack.Stack, vm Machine) error {
 	if value, err := st.Pop(); err != nil {
 		return err
 	} else {
@@ -123,9 +123,9 @@ func (inst Asg) Exec(st stack.Stack, vm Machine) error {
 	return nil
 }
 
-type Deref int
+type LoadMemory int
 
-func (inst Deref) Exec(st stack.Stack, vm Machine) error {
+func (inst LoadMemory) Exec(st stack.Stack, vm Machine) error {
 	st.Push(vm.Load(int(inst)))
 	return nil
 }
@@ -155,7 +155,7 @@ func (inst Equal) String() string   { return "eql" }
 func (inst Greater) String() string { return "gtt" }
 func (inst Lesser) String() string  { return "ltt" }
 
-func (inst PushInt) String() string { return fmt.Sprintf("psh %d", int(inst)) }
-func (inst Asg) String() string     { return fmt.Sprintf("stm %d", int(inst)) }
-func (inst Deref) String() string   { return fmt.Sprintf("ldm %d", int(inst)) }
-func (inst Output) String() string  { return fmt.Sprintf("out %d", int(inst)) }
+func (inst PushInt) String() string     { return fmt.Sprintf("psh %d", int(inst)) }
+func (inst StoreMemory) String() string { return fmt.Sprintf("stm %d", int(inst)) }
+func (inst LoadMemory) String() string  { return fmt.Sprintf("ldm %d", int(inst)) }
+func (inst Output) String() string      { return fmt.Sprintf("out %d", int(inst)) }

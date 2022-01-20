@@ -166,7 +166,7 @@ func TestAsg(t *testing.T) {
 
 	for _, tc := range cases {
 		vm := newExecTestVM(tc)
-		err := callExec(tc, vm, Asg(5), func() error {
+		err := callExec(tc, vm, StoreMemory(5), func() error {
 			return vm.expectMemInt(tc.exp.(int))
 		})
 		if err != nil {
@@ -178,7 +178,7 @@ func TestAsg(t *testing.T) {
 func TestDeref(t *testing.T) {
 	vm := newMockVM()
 	vm.mem = 99
-	err := callExec(execTestCase{err: false}, vm, Deref(5), func() error {
+	err := callExec(execTestCase{err: false}, vm, LoadMemory(5), func() error {
 		return vm.expectStackInt(99)
 	})
 	if err != nil {
@@ -203,8 +203,8 @@ func TestToString(t *testing.T) {
 		{"gtt", Greater{}},
 		{"ltt", Lesser{}},
 		{"psh 5", PushInt(5)},
-		{"stm 5", Asg(5)},
-		{"ldm 5", Deref(5)},
+		{"stm 5", StoreMemory(5)},
+		{"ldm 5", LoadMemory(5)},
 		{"out 5", Output(5)},
 	}
 

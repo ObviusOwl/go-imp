@@ -16,7 +16,7 @@ func TestLoadAssemblyFile(t *testing.T) {
 		Label(1),
 		PushInt(10),
 		Label(2),
-		Asg(1),
+		StoreMemory(1),
 		Output(1),
 		PushInt(4),
 		PushInt(5),
