@@ -33,6 +33,7 @@ type Memory interface {
 // This is the interface to a basic control unit within the CPU.
 type Runner interface {
 	Run(program Program) error
+	Stop() error
 	Jump(label Label) error
 }
 
@@ -77,7 +78,6 @@ func (vm *VM) Jump(label Label) error {
 		}
 	}
 	return fmt.Errorf("segmentation fault: jump label not found %v", label)
-
 }
 
 // Run the given program. The memory and stack are not reset.
@@ -91,6 +91,11 @@ func (vm *VM) Run(program Program) error {
 			return err
 		}
 	}
+	return nil
+}
+
+func (vm *VM) Stop() error {
+	vm.pc = len(vm.program)
 	return nil
 }
 
