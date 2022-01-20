@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"os"
 
-	"terhaak.de/imp/pkg/vm"
+	"terhaak.de/imp/pkg/asm"
 )
 
 func main() {
@@ -21,7 +21,7 @@ func main() {
 	}
 
 	if asmCmd.Parsed() {
-		err := vm.RunAssemblyFile(*asmFile)
+		err := asm.RunAssemblyFile(*asmFile)
 		if err != nil {
 			fmt.Printf("Error: %v\n", err)
 		}
