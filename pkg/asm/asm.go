@@ -34,6 +34,8 @@ func ParseMnemonic(s string) (vm.Executer, error) {
 		return vm.JumpNonZero(coerceInt(m[2])), nil
 	case "jez":
 		return vm.JumpZero(coerceInt(m[2])), nil
+	case "stop":
+		return vm.Stop{}, nil
 
 	case "add":
 		return vm.Add{}, nil
