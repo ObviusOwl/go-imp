@@ -158,6 +158,17 @@ func TestJumpZero(t *testing.T) {
 	}
 }
 
+func TestStop(t *testing.T) {
+	vm := newMockVM()
+	err := Stop{}.Exec(vm.stack, vm)
+	if err != nil {
+		t.Fatalf("Expected no error, but got %v", err)
+	}
+	if !vm.stopSet {
+		t.Fatalf("Expected vm.Stop() to be called, but it was not")
+	}
+}
+
 func TestAsg(t *testing.T) {
 	cases := []execTestCase{
 		{name: "5", a: 5, b: 7, exp: 5, err: false},
@@ -195,6 +206,7 @@ func TestToString(t *testing.T) {
 		{"jmp 5", Jump(5)},
 		{"jnz 5", JumpNonZero(5)},
 		{"jez 5", JumpZero(5)},
+		{"stp", Stop{}},
 		{"add", Add{}},
 		{"min", Minus{}},
 		{"div", Div{}},

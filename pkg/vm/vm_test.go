@@ -8,22 +8,29 @@ import (
 )
 
 type vmMock struct {
-	mem   interface{}
-	stack stack.Stack
-	pc    Label
-	pcSet bool
+	mem     interface{}
+	stack   stack.Stack
+	pc      Label
+	pcSet   bool
+	stopSet bool
 }
 
 func newMockVM() *vmMock {
 	vm := &vmMock{}
 	vm.stack = stack.New()
 	vm.pcSet = false
+	vm.stopSet = false
 	return vm
 }
 
 func (vm *vmMock) Run(program Program) error {
 	return nil
 }
+func (vm *vmMock) Stop() error {
+	vm.stopSet = true
+	return nil
+}
+
 func (vm *vmMock) Jump(label Label) error {
 	vm.pc = label
 	vm.pcSet = true
@@ -107,5 +114,21 @@ func TestVMRun(t *testing.T) {
 	}
 	if values, _ := popInts(vm.stack, 1); values[0] != 99 {
 		t.Fatalf("Expected stack top for %d, but got %d", 99, values[0])
+	}
+}
+
+func TestVMStop(t *testing.T) {
+	prog := Program{
+		PushInt(99),
+		Stop{},
+		PushInt(1),
+	}
+
+	vm := New()
+	if err := vm.Run(prog); err != nil {
+		t.Fatal(err)
+	}
+	if values, _ := popInts(vm.stack, 1); values[0] != 99 {
+		t.Fatalf("Expected stack top to be %d, but got %d", 99, values[0])
 	}
 }
