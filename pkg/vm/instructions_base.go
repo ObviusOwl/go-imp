@@ -36,6 +36,13 @@ func (inst JumpZero) Exec(st stack.Stack, vm Machine) error {
 	return err
 }
 
+type Stop struct{}
+
+func (inst Stop) Exec(st stack.Stack, vm Machine) error {
+	vm.Stop()
+	return nil
+}
+
 //
 // Arithmetic instructions
 //
@@ -145,6 +152,7 @@ func (inst Label) String() string       { return fmt.Sprintf("lab %d", int(inst)
 func (inst Jump) String() string        { return fmt.Sprintf("jmp %d", int(inst)) }
 func (inst JumpNonZero) String() string { return fmt.Sprintf("jnz %d", int(inst)) }
 func (inst JumpZero) String() string    { return fmt.Sprintf("jez %d", int(inst)) }
+func (inst Stop) String() string        { return "stp" }
 
 func (inst Add) String() string   { return "add" }
 func (inst Minus) String() string { return "min" }
