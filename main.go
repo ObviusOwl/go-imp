@@ -5,43 +5,49 @@ import (
 	"fmt"
 	"io/ioutil"
 	"os"
-	"regexp"
-	"strconv"
 
 	"terhaak.de/imp/pkg/asm"
 	"terhaak.de/imp/pkg/lexer"
 	"terhaak.de/imp/pkg/vm"
 )
 
-func parseMemFlags() vm.Program {
-	var prog vm.Program
-	if len(os.Args) == 1 {
-		return prog
+func parseMemFlags(params []asm.Parameter) vm.Program {
+	// Set up flag parser using the flag.Value interface
+	for _, p := range params {
+		if v, ok := p.(asm.StringParameter); ok {
+			flag.Var(v, v.Name, "")
+		}
+		if v, ok := p.(asm.IntParameter); ok {
+			flag.Var(v, v.Name, "")
+		}
 	}
-	r := regexp.MustCompile("^([0-9]+):(.*)$")
-	for _, f := range os.Args[1:] {
-		if m := r.FindStringSubmatch(f); m != nil {
-			addr, _ := strconv.ParseInt(m[1], 10, 0)
-			value, _ := strconv.ParseInt(m[2], 10, 0)
-			prog = append(prog, vm.PushInt(value), vm.StoreMemory(addr))
+	flag.Parse()
+
+	// generate VM code to set the memory locations
+	prog := make(vm.Program, 0, 2*len(params))
+	for _, p := range params {
+		if v, ok := p.(asm.StringParameter); ok {
+			prog = append(prog, vm.PushStr(*v.Value), vm.StoreMemory(v.Address))
+		}
+		if v, ok := p.(asm.IntParameter); ok {
+			prog = append(prog, vm.PushInt(*v.Value), vm.StoreMemory(v.Address))
 		}
 	}
 	return prog
 }
 
 func execEmbedded() {
-	if prog, err := asm.LoadEmbeddedAssembly(); err != nil {
+	if prog, meta, err := asm.LoadEmbeddedAssembly(); err != nil {
 		fmt.Printf("Error: %v\n", err)
 		os.Exit(2)
 	} else if prog != nil {
-		prog = append(parseMemFlags(), prog...)
+		prog = append(parseMemFlags(meta.Params), prog...)
 		if err := vm.RunProgram(prog); err != nil {
 			fmt.Printf("Error: %v\n", err)
 			os.Exit(2)
 		}
 		os.Exit(0)
 	}
-
 }
 
 func runLexer(fileName string) error {

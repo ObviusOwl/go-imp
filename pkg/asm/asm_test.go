@@ -25,7 +25,7 @@ func TestLoadAssemblyFile(t *testing.T) {
 		vm.Add{},
 	}
 
-	actual, err := LoadAssemblyFile("testdata/test1.asm")
+	actual, _, err := LoadAssemblyFile("testdata/test1.asm")
 	if err != nil {
 		t.Fatal(err)
 	}

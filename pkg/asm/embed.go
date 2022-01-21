@@ -12,10 +12,10 @@ import (
 
 const magicString = "embeddedcodecode"
 
-func LoadEmbeddedAssembly() (vm.Program, error) {
+func LoadEmbeddedAssembly() (vm.Program, Metadata, error) {
 	exeFile, err := os.Open("/proc/self/exe")
 	if err != nil {
-		return nil, err
+		return nil, Metadata{}, err
 	}
 	defer exeFile.Close()
 
@@ -23,26 +23,26 @@ func LoadEmbeddedAssembly() (vm.Program, error) {
 	suffixSize := int64(len(magicString) + 8)
 
 	if _, err := exeFile.Seek(-1*suffixSize, io.SeekEnd); err != nil {
-		return nil, err
+		return nil, Metadata{}, err
 	}
 
 	var codeSize int64
 	if suffix, err := ioutil.ReadAll(exeFile); err != nil {
-		return nil, err
+		return nil, Metadata{}, err
 	} else if !bytes.Equal(suffix[8:], []byte(magicString)) {
 		// no embedded program
-		return nil, nil
+		return nil, Metadata{}, nil
 	} else {
 		// network byte order
 		codeSize = int64(binary.BigEndian.Uint64(suffix[:8]))
 	}
 
 	if _, err := exeFile.Seek(-1*(codeSize+suffixSize), io.SeekEnd); err != nil {
-		return nil, err
+		return nil, Metadata{}, err
 	}
 
 	if code, err := ioutil.ReadAll(exeFile); err != nil {
-		return nil, err
+		return nil, Metadata{}, err
 	} else {
 		codeReader := bytes.NewReader(code[:len(code)-int(suffixSize)])
 		return ParseAssemblyFile(codeReader)
