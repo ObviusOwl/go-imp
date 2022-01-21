@@ -69,6 +69,18 @@ func (vm *vmMock) expectStackInt(expected int) error {
 	return nil
 }
 
+func (vm *vmMock) expectStackStr(expected string) error {
+	item, err := vm.stack.Peek()
+	if err == nil {
+		if actual, ok := item.(string); !ok {
+			return fmt.Errorf("Expected top of the stack to be string, got %v", item)
+		} else if actual != expected {
+			return fmt.Errorf("Expected top of the stack to be '%s', got '%s'", expected, actual)
+		}
+	}
+	return err
+}
+
 func (vm *vmMock) expectJump(expected bool, label Label) error {
 	if !expected && vm.pcSet {
 		return fmt.Errorf("Expected no jump, but got label %v", vm.pc)
