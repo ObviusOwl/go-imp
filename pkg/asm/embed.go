@@ -3,9 +3,11 @@ package asm
 import (
 	"bytes"
 	"encoding/binary"
+	"fmt"
 	"io"
 	"io/ioutil"
 	"os"
+	"runtime"
 
 	"terhaak.de/imp/pkg/vm"
 )
@@ -13,6 +15,11 @@ import (
 const magicString = "embeddedcodecode"
 
 func LoadEmbeddedAssembly() (vm.Program, Metadata, error) {
+	if runtime.GOOS != "linux" {
+		// The file /proc/self/exe does not exist on other platforms than linux
+		return nil, Metadata{}, nil
+	}
+
 	exeFile, err := os.Open("/proc/self/exe")
 	if err != nil {
 		return nil, Metadata{}, err
@@ -50,6 +57,10 @@ func LoadEmbeddedAssembly() (vm.Program, Metadata, error) {
 }
 
 func EmbedAssembly(targetFile io.Writer, sourceFile io.Reader) error {
+	if runtime.GOOS != "linux" {
+		return fmt.Errorf("embeddign assembly works only on linux")
+	}
+
 	exeFile, err := os.Open("/proc/self/exe")
 	if err != nil {
 		return err
