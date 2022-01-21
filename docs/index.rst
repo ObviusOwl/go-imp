@@ -11,6 +11,7 @@ Welcome to go-IMP's documentation!
    :caption: Contents:
 
    vm
+   asm
    features
 
 
