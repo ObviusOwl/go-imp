@@ -23,7 +23,7 @@ func newMockVM() *vmMock {
 	return vm
 }
 
-func (vm *vmMock) Run(program Program) error {
+func (vm *vmMock) Run(program Program, mem Memory) error {
 	return nil
 }
 func (vm *vmMock) Stop() error {
@@ -94,18 +94,18 @@ func (vm *vmMock) expectJump(expected bool, label Label) error {
 
 func TestVMJump(t *testing.T) {
 	vm := New()
-	vm.program = Program{PushInt(4), Label(5), Label(6)}
-	vm.pc = 0
-	vm.Jump(6)
-	if vm.pc != 2 {
-		t.Fatalf("Expected program counter to be %d, but got %d", 2, vm.pc)
+	vm.ctrl.program = Program{PushInt(4), Label(5), Label(6)}
+	vm.ctrl.pc = 0
+	vm.ctrl.Jump(6)
+	if vm.ctrl.pc != 2 {
+		t.Fatalf("Expected program counter to be %d, but got %d", 2, vm.ctrl.pc)
 	}
 }
 
 func TestVMLoadStore(t *testing.T) {
 	vm := New()
-	vm.Store(5, 99)
-	if actual := vm.Load(5); actual != 99 {
+	vm.mem.Store(5, 99)
+	if actual := vm.mem.Load(5); actual != 99 {
 		t.Fatalf("Expected memory value to be %d, but got %d", 99, actual)
 	}
 }
@@ -121,10 +121,10 @@ func TestVMRun(t *testing.T) {
 	}
 
 	vm := New()
-	if err := vm.Run(prog); err != nil {
+	if err := vm.ctrl.Run(prog, vm.mem); err != nil {
 		t.Fatal(err)
 	}
-	if values, _ := popInts(vm.stack, 1); values[0] != 99 {
+	if values, _ := popInts(vm.ctrl.stack, 1); values[0] != 99 {
 		t.Fatalf("Expected stack top for %d, but got %d", 99, values[0])
 	}
 }
@@ -137,10 +137,10 @@ func TestVMStop(t *testing.T) {
 	}
 
 	vm := New()
-	if err := vm.Run(prog); err != nil {
+	if err := vm.ctrl.Run(prog, vm.mem); err != nil {
 		t.Fatal(err)
 	}
-	if values, _ := popInts(vm.stack, 1); values[0] != 99 {
+	if values, _ := popInts(vm.ctrl.stack, 1); values[0] != 99 {
 		t.Fatalf("Expected stack top to be %d, but got %d", 99, values[0])
 	}
 }

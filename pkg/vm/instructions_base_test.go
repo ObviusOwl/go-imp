@@ -21,7 +21,7 @@ func newExecTestVM(tc execTestCase) *vmMock {
 }
 
 func callExec(tc execTestCase, vm *vmMock, subject Executer, valueTest func() error) error {
-	err := subject.Exec(vm.stack, vm)
+	err := subject.Exec(vm, vm.stack, vm)
 	if err != nil && tc.err {
 		return nil
 	} else if err != nil && !tc.err {
@@ -115,7 +115,7 @@ func TestEqual(t *testing.T) {
 
 func TestJump(t *testing.T) {
 	vm := newMockVM()
-	Jump(5).Exec(vm.stack, vm)
+	Jump(5).Exec(vm, vm.stack, vm)
 	if err := vm.expectJump(true, 5); err != nil {
 		t.Fatal(err)
 	}
@@ -160,7 +160,7 @@ func TestJumpZero(t *testing.T) {
 
 func TestStop(t *testing.T) {
 	vm := newMockVM()
-	err := Stop{}.Exec(vm.stack, vm)
+	err := Stop{}.Exec(vm, vm.stack, vm)
 	if err != nil {
 		t.Fatalf("Expected no error, but got %v", err)
 	}

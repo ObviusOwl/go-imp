@@ -9,14 +9,14 @@ import (
 
 type PushStr string
 
-func (inst PushStr) Exec(st stack.Stack, vm Machine) error {
+func (inst PushStr) Exec(vm Runner, st stack.Stack, mem Memory) error {
 	st.Push(string(inst))
 	return nil
 }
 
 type ConcatStr struct{}
 
-func (inst ConcatStr) Exec(st stack.Stack, vm Machine) error {
+func (inst ConcatStr) Exec(vm Runner, st stack.Stack, mem Memory) error {
 	values, err := popStrings(st, 2)
 	if err == nil {
 		st.Push(values[0] + values[1])
@@ -26,7 +26,7 @@ func (inst ConcatStr) Exec(st stack.Stack, vm Machine) error {
 
 type FormatStr string
 
-func (inst FormatStr) Exec(st stack.Stack, vm Machine) error {
+func (inst FormatStr) Exec(vm Runner, st stack.Stack, mem Memory) error {
 	format := string(inst)
 	// count how many % we have, minus the escaped ones
 	argc := strings.Count(format, "%") - 2*strings.Count(format, "%%")
@@ -46,7 +46,7 @@ func (inst FormatStr) Exec(st stack.Stack, vm Machine) error {
 
 type LengthStr struct{}
 
-func (inst LengthStr) Exec(st stack.Stack, vm Machine) error {
+func (inst LengthStr) Exec(vm Runner, st stack.Stack, mem Memory) error {
 	values, err := popStrings(st, 1)
 	if err == nil {
 		st.Push(len(values[0]))

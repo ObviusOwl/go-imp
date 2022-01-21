@@ -12,13 +12,13 @@ import (
 
 type Jump Label
 
-func (inst Jump) Exec(st stack.Stack, vm Machine) error {
+func (inst Jump) Exec(vm Runner, st stack.Stack, mem Memory) error {
 	return vm.Jump(Label(inst))
 }
 
 type JumpNonZero Label
 
-func (inst JumpNonZero) Exec(st stack.Stack, vm Machine) error {
+func (inst JumpNonZero) Exec(vm Runner, st stack.Stack, mem Memory) error {
 	values, err := popInts(st, 1)
 	if err == nil && IntToBool(values[0]) {
 		return vm.Jump(Label(inst))
@@ -28,7 +28,7 @@ func (inst JumpNonZero) Exec(st stack.Stack, vm Machine) error {
 
 type JumpZero Label
 
-func (inst JumpZero) Exec(st stack.Stack, vm Machine) error {
+func (inst JumpZero) Exec(vm Runner, st stack.Stack, mem Memory) error {
 	values, err := popInts(st, 1)
 	if err == nil && !IntToBool(values[0]) {
 		return vm.Jump(Label(inst))
@@ -38,7 +38,7 @@ func (inst JumpZero) Exec(st stack.Stack, vm Machine) error {
 
 type Stop struct{}
 
-func (inst Stop) Exec(st stack.Stack, vm Machine) error {
+func (inst Stop) Exec(vm Runner, st stack.Stack, mem Memory) error {
 	vm.Stop()
 	return nil
 }
@@ -49,19 +49,19 @@ func (inst Stop) Exec(st stack.Stack, vm Machine) error {
 
 type Add struct{}
 
-func (inst Add) Exec(st stack.Stack, vm Machine) error {
+func (inst Add) Exec(vm Runner, st stack.Stack, mem Memory) error {
 	return stackIntReduce(st, func(a, b int) (DataValue, error) { return a + b, nil })
 }
 
 type Minus struct{}
 
-func (inst Minus) Exec(st stack.Stack, vm Machine) error {
+func (inst Minus) Exec(vm Runner, st stack.Stack, mem Memory) error {
 	return stackIntReduce(st, func(a, b int) (DataValue, error) { return a - b, nil })
 }
 
 type Div struct{}
 
-func (inst Div) Exec(st stack.Stack, vm Machine) error {
+func (inst Div) Exec(vm Runner, st stack.Stack, mem Memory) error {
 	return stackIntReduce(st, func(a, b int) (DataValue, error) {
 		if b == 0 {
 			return 0, fmt.Errorf("division by zero")
@@ -72,7 +72,7 @@ func (inst Div) Exec(st stack.Stack, vm Machine) error {
 
 type Mult struct{}
 
-func (inst Mult) Exec(st stack.Stack, vm Machine) error {
+func (inst Mult) Exec(vm Runner, st stack.Stack, mem Memory) error {
 	return stackIntReduce(st, func(a, b int) (DataValue, error) { return a * b, nil })
 }
 
@@ -82,7 +82,7 @@ func (inst Mult) Exec(st stack.Stack, vm Machine) error {
 
 type Equal struct{}
 
-func (inst Equal) Exec(st stack.Stack, vm Machine) error {
+func (inst Equal) Exec(vm Runner, st stack.Stack, mem Memory) error {
 	op1, err1 := st.Pop()
 	op2, err2 := st.Pop()
 
@@ -98,13 +98,13 @@ func (inst Equal) Exec(st stack.Stack, vm Machine) error {
 
 type Lesser struct{}
 
-func (inst Lesser) Exec(st stack.Stack, vm Machine) error {
+func (inst Lesser) Exec(vm Runner, st stack.Stack, mem Memory) error {
 	return stackIntReduce(st, func(a, b int) (DataValue, error) { return BoolToInt(a < b), nil })
 }
 
 type Greater struct{}
 
-func (inst Greater) Exec(st stack.Stack, vm Machine) error {
+func (inst Greater) Exec(vm Runner, st stack.Stack, mem Memory) error {
 	return stackIntReduce(st, func(a, b int) (DataValue, error) { return BoolToInt(a > b), nil })
 }
 
@@ -114,33 +114,33 @@ func (inst Greater) Exec(st stack.Stack, vm Machine) error {
 
 type PushInt int
 
-func (inst PushInt) Exec(st stack.Stack, vm Machine) error {
+func (inst PushInt) Exec(vm Runner, st stack.Stack, mem Memory) error {
 	st.Push(int(inst))
 	return nil
 }
 
 type StoreMemory int
 
-func (inst StoreMemory) Exec(st stack.Stack, vm Machine) error {
+func (inst StoreMemory) Exec(vm Runner, st stack.Stack, mem Memory) error {
 	if value, err := st.Pop(); err != nil {
 		return err
 	} else {
-		vm.Store(int(inst), value)
+		mem.Store(int(inst), value)
 	}
 	return nil
 }
 
 type LoadMemory int
 
-func (inst LoadMemory) Exec(st stack.Stack, vm Machine) error {
-	st.Push(vm.Load(int(inst)))
+func (inst LoadMemory) Exec(vm Runner, st stack.Stack, mem Memory) error {
+	st.Push(mem.Load(int(inst)))
 	return nil
 }
 
 type Output int
 
-func (inst Output) Exec(st stack.Stack, vm Machine) error {
-	fmt.Printf("%v\n", vm.Load(int(inst)))
+func (inst Output) Exec(vm Runner, st stack.Stack, mem Memory) error {
+	fmt.Printf("%v\n", mem.Load(int(inst)))
 	return nil
 }
 
