@@ -64,7 +64,7 @@ latex_engine = 'pdflatex'
 
 latex_elements = {
     'papersize':'a4paper',
-    'pointsize':'12pt',
+    'pointsize':'11pt',
     # https://stackoverflow.com/questions/5422997/sphinx-docs-remove-blank-pages-from-generated-pdfs
     'extraclassoptions': 'openany',
 }
