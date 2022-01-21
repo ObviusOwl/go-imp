@@ -191,6 +191,7 @@ func EmbedAssemblyFile(target, source string) error {
 	binTarget, err := os.Create(target)
 	if err == nil {
 		defer binTarget.Close()
+		defer binTarget.Chmod(0755)
 		binSource, err := os.Open(source)
 		if err == nil {
 			defer binSource.Close()
