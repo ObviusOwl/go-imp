@@ -57,5 +57,5 @@ func (inst LengthStr) Exec(st stack.Stack, vm Machine) error {
 func (inst ConcatStr) String() string { return "cat" }
 func (inst LengthStr) String() string { return "len" }
 
-func (inst PushStr) String() string   { return fmt.Sprintf("psh \"%s\"", string(inst)) }
+func (inst PushStr) String() string   { return fmt.Sprintf("str \"%s\"", string(inst)) }
 func (inst FormatStr) String() string { return fmt.Sprintf("fmt \"%s\"", string(inst)) }
