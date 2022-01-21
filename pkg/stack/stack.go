@@ -79,14 +79,17 @@ func (s *stack) Peek() (interface{}, error) {
 }
 
 // Process pops items from the stack for the processItem function to process
-// until either there is a pop error (ie. empty stack) or the function returns false
-func Process(st Poper, processItem func(int, interface{}) bool) error {
+// until either there is a pop error (ie. empty stack) or the function returns
+// false or an non nil error
+func Process(st Poper, processItem func(int, interface{}) (bool, error)) error {
 	for itcount := 1; ; itcount++ {
 		item, err := st.Pop()
 		if err != nil {
 			return err
 		}
-		if doContinue := processItem(itcount, item); !doContinue {
+		if doContinue, processErr := processItem(itcount, item); processErr != nil {
+			return processErr
+		} else if !doContinue {
 			return nil
 		}
 	}

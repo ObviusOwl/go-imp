@@ -121,7 +121,7 @@ func TestProcess(t *testing.T) {
 	s.Push(1)
 
 	expected := 1
-	Process(s, func(it int, item interface{}) bool {
+	Process(s, func(it int, item interface{}) (bool, error) {
 		value, ok := item.(int)
 		if !ok {
 			t.Fatalf("Failed to convert item %v to int", value)
@@ -133,7 +133,7 @@ func TestProcess(t *testing.T) {
 			t.Fatalf("Expected it to be %d, but got %d", expected, value)
 		}
 		expected++
-		return true
+		return true, nil
 	})
 
 	if !s.Empty() {
@@ -152,13 +152,34 @@ func TestProcessPartial(t *testing.T) {
 	s.Push(1)
 
 	expected := 1
-	Process(s, func(it int, item interface{}) bool {
+	Process(s, func(it int, item interface{}) (bool, error) {
 		expected++
-		return expected < 3
+		return expected < 3, nil
 	})
 
 	if len(s.items) != 2 {
 		t.Fatalf("Expected stack to have %d items, but got %d", 2, len(s.items))
+	}
+	if expected != 3 {
+		t.Fatalf("Expected counter to be %d, but got %d", 3, expected)
+	}
+}
+
+func TestProcessError(t *testing.T) {
+	s := New()
+	pushValues(s, []int{4, 3, 2, 1})
+
+	expected := 1
+	err := Process(s, func(it int, item interface{}) (bool, error) {
+		expected++
+		if expected == 3 {
+			return true, fmt.Errorf("test")
+		}
+		return expected < 3, nil
+	})
+
+	if err == nil || err.Error() != "test" {
+		t.Fatalf("Expected process error with message '%s', but go %v", "error", err)
 	}
 	if expected != 3 {
 		t.Fatalf("Expected counter to be %d, but got %d", 3, expected)

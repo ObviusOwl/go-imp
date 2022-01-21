@@ -7,22 +7,29 @@ import (
 )
 
 func popInts(st stack.Stack, count int) ([]int, error) {
-	var typeerr error = nil
 	values := make([]int, count)
-
-	stackerr := stack.Process(st, func(itcount int, item interface{}) bool {
+	err := stack.Process(st, func(itcount int, item interface{}) (bool, error) {
 		if value, ok := item.(int); ok {
 			values[itcount-1] = value
 		} else {
-			typeerr = fmt.Errorf("expected int from stack, got %v", item)
+			return (itcount < count), fmt.Errorf("expected int from stack, got %v", item)
 		}
-		return (itcount < count) && (typeerr == nil)
+		return (itcount < count), nil
 	})
+	return values, err
+}
 
-	if stackerr != nil {
-		return values, stackerr
-	}
-	return values, typeerr
+func popStrings(st stack.Stack, count int) ([]string, error) {
+	values := make([]string, count)
+	err := stack.Process(st, func(itcount int, item interface{}) (bool, error) {
+		if value, ok := item.(string); ok {
+			values[itcount-1] = value
+		} else {
+			return (itcount < count), fmt.Errorf("expected string from stack, got %v", item)
+		}
+		return (itcount < count), nil
+	})
+	return values, err
 }
 
 func stackIntReduce(st stack.Stack, f func(int, int) (DataValue, error)) error {
