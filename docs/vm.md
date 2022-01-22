@@ -49,6 +49,18 @@ to how `go run main.go` directly runs the program and `go build main.go` only pr
 the binary program. This is also the case for most unit tests that test the VM 
 implementation.
 
+For example the following Go code produces VM code that adds 1 to 99:
+
+```go
+code := Program{
+    PushInt(1),
+    PushInt(99),
+    Add{},
+    StoreMemory{1}
+    Output{1}
+}
+```
+
 To be able to load a program of instructions from a file, there must be some sort 
 of representation that is not the memory of a running process. The VM implementation
 must translate this representation into it's native representation. The format of 
@@ -56,6 +68,16 @@ this file should be independent of the programing language the VM is implemented
 There could be a purely binary file representation, however as noted above, this is 
 not practical. Instead the VM directly interprets the assembly code that is designed 
 for this VM. 
+
+For example the following text can be loaded from a file:
+
+```nasm
+psh 1
+psh 99
+add
+stm 1
+out 1
+```
 
 The instructions the VM can execute accept exactly zero or one parameter. This makes 
 implementing the instructions and the parser for the assembly language simple. It 
@@ -74,6 +96,15 @@ A stack based CPU (or VM) uses instead a stack, which is a
 In a first step the operands are pushed to the stack. Then, when the instruction 
 using the operands is executed, the operands are poped (removed) and the result 
 is pushed onto the stack so that the next instruction can use it as it's input.
+
+```text
+|  initial  |  after    |   after   |  after    |
+|           |  psh 1    |   psh 99  |  add      |
+|           |           |           |           |
+|           |           |  [99]     |           |
+|           |  [1]      |  [1]      |  [100]    |
+|  [empty]  |  [empty]  |  [empty]  |  [empty]  |
+```
 
 How many operands each instructions expects to be available on the stack, how 
 many values are pushed to the stack by the instruction and what the instruction 
