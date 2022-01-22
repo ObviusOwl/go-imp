@@ -129,15 +129,21 @@ to store more permanent data. Only two methods are needed `Load()` and `Store()`
 Any type having these methods can do the job, regardless how the data is stored: 
 in files, a database over the network or in memory. 
 
-The three interfaces `Runner`, `Stack` and `Memory` provide separation of consers 
-and polymorphism, which facilitate composition and thus effective code reuse, 
+The three interfaces `Runner`, `Stack` and `Memory` provide separation of concerns
+and polymorphism, which facilitates composition and thus effective code reuse, 
 high maintability, extensibility and flexibility. The three interfaces can also 
 be implemented by the same type, as it is with the mocked type used in the unit tests. 
+These three services are passed into the `Exec` functions as 
+[dependencies](https://en.wikipedia.org/wiki/Dependency_injection)
+forming with the `Runner` a perfect example of the 
+[inversion of control](https://en.wikipedia.org/wiki/Inversion_of_control) 
+principle.
+
 
 The `Memory` and the `Stack` hold both values of the type `DataValue`, which is 
 based on the empty interface. In go the empty interface is implemented by all 
 types. It is similar to the `object` type in Java. The data types available to 
-by the instructions should not be restricted a priori. For example the instructions
+the instructions should not be restricted a priori. For example the instructions
 handling strings were added as an extension. They need to store Go strings. 
 This can be done by abstracting the storage as array of bytes, but it is much 
 more convenient, faster and safer to use Go 
