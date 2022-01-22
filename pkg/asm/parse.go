@@ -11,17 +11,48 @@ import (
 	"terhaak.de/imp/pkg/vm"
 )
 
-var opNameReg = regexp.MustCompile(`^\s*([a-zA-Z]+)`)
+// MnemonicParser provides the method Parse to parse a Mnemonic
+//
+// First parameter the mnemonic name in lower case, second parameter
+// is the text following directly the mnemonic name on the line including comments
+// and whitespace. Third parameter is the current line number.
+//
+// The return values are first the parsed vm.Executer (nil if the parser did not match).
+// Second the number of caracters consumed (may be 0 for 0-argument instructions)
+// and last an error (nil for no error, not matching the line is not an error).
+//
+// All parsers are called until one returns a non-nil Executer.
+// The error (if any) from the last parser that was run is used to abort the parsing.
+// If no parser matches (produces a non-nil Executer) the parsing is aborted with an error.
+//
+// Parsers may be stateful. There may be multiple parsers for the same instruction
+// as long as it is deterministic what parser handles which variant. For example
+// an instruction name may be overloaded with an int or a string argument, which
+// can be handled by different parsers.
+type MnemonicParser interface {
+	Parse(name string, line string, lineNum int) (vm.Executer, int, error)
+}
+
+var opNameReg = regexp.MustCompile(`^(?:\s*([a-zA-Z]+|;))|(?:\s*$)`)
 var intArgReg = regexp.MustCompile(`^\s*(-?[0-9]+)`)
 var strArgReg = regexp.MustCompile(`^\s*"([^"\\]*(?:\\.[^"\\]*)*)"`)
 var paramReg = regexp.MustCompile(`^\s*@param\s+([a-zA-Z0-9]+)\s+(-?[0-9]+)\s+(str|int)\s+`)
 
-func parseOpName(s string) (string, int) {
+func parseOpName(s string) (string, int, bool) {
 	m := opNameReg.FindStringSubmatch(s)
 	if m == nil {
-		return "", 0
+		// no match = error, consume none
+		return "", 0, false
+	} else if m[1] == ";" {
+		// comment only line, consume all
+		return "", len(s), true
+	} else if m[1] == "" {
+		// whitespace only line, consume fullmatch
+		return "", len(m[0]), true
+	} else {
+		// found name, consume name only
+		return strings.ToLower(m[1]), len(m[1]), true
 	}
-	return strings.ToLower(m[1]), len(m[0])
 }
 
 func parseIntArg(s string) (int, int) {
@@ -40,75 +71,6 @@ func parseStrArg(s string) (string, int) {
 	}
 	v, _ := strconv.Unquote(`"` + m[1] + `"`)
 	return v, len(m[0])
-}
-
-func parseMnemonic(name string, line string, lineNum int) (vm.Executer, int, error) {
-	var arg interface{}
-	var l int = 0
-
-	switch name {
-	case "lab", "jmp", "jnz", "jez", "psh", "stm", "ldm", "out":
-		arg, l = parseIntArg(line)
-		if l == 0 {
-			return nil, 0, fmt.Errorf("expected int argument on line %d", lineNum)
-		}
-	case "str", "fmt":
-		arg, l = parseStrArg(line)
-		if l == 0 {
-			return nil, 0, fmt.Errorf("expected string argument on line %d", lineNum)
-		}
-	}
-
-	switch name {
-	case "lab":
-		return vm.Label(arg.(int)), l, nil
-	case "jmp":
-		return vm.Jump(arg.(int)), l, nil
-	case "jnz":
-		return vm.JumpNonZero(arg.(int)), l, nil
-	case "jez":
-		return vm.JumpZero(arg.(int)), l, nil
-	case "stop":
-		return vm.Stop{}, l, nil
-
-	case "add":
-		return vm.Add{}, l, nil
-	case "min":
-		return vm.Minus{}, l, nil
-	case "div":
-		return vm.Div{}, l, nil
-	case "mul":
-		return vm.Mult{}, l, nil
-
-	case "eql":
-		return vm.Equal{}, l, nil
-	case "gtt":
-		return vm.Greater{}, l, nil
-	case "ltt":
-		return vm.Lesser{}, l, nil
-
-	case "psh":
-		return vm.PushInt(arg.(int)), l, nil
-	case "stm":
-		return vm.StoreMemory(arg.(int)), l, nil
-	case "ldm":
-		return vm.LoadMemory(arg.(int)), l, nil
-	case "out":
-		return vm.Output(arg.(int)), l, nil
-
-	case "cat":
-		return vm.ConcatStr{}, l, nil
-	case "len":
-		return vm.LengthStr{}, l, nil
-	case "str":
-		return vm.PushStr(arg.(string)), l, nil
-	case "fmt":
-		return vm.FormatStr(arg.(string)), l, nil
-
-	default:
-		return nil, l, fmt.Errorf("unknown opcode %s", name)
-	}
-
 }
 
 func parseParam(line string, lineNum int) (*Parameter, error) {
@@ -138,7 +100,20 @@ func parseParam(line string, lineNum int) (*Parameter, error) {
 	return &p, nil
 }
 
+// ParseAssemblyFile uses the default mnemonic parsers.
+// Use ParseAssembly() for control over the used parsers
 func ParseAssemblyFile(file io.Reader) (vm.Program, Metadata, error) {
+	parsers := []MnemonicParser{
+		CtrlInstrParser{},
+		MathInstrParser{},
+		LogicInstrParser{},
+		DataInstrParser{},
+		StrInstrParser{},
+	}
+	return ParseAssembly(file, parsers)
+}
+
+func ParseAssembly(file io.Reader, parsers []MnemonicParser) (vm.Program, Metadata, error) {
 	var program vm.Program
 	var meta Metadata
 
@@ -162,19 +137,26 @@ func ParseAssemblyFile(file io.Reader) (vm.Program, Metadata, error) {
 			continue
 		}
 
-		line = strings.Split(line, ";")[0]
-
-		opName, l := parseOpName(line)
-		if l == 0 {
+		opName, l, ok := parseOpName(line)
+		if !ok {
 			return nil, meta, fmt.Errorf("expected opname on line %d", lineNum)
+		} else if opName == "" {
+			continue
 		}
 		line = line[l:]
 
-		op, _, err := parseMnemonic(opName, line, lineNum)
-		if err != nil {
-			return nil, meta, err
+		var err error = nil
+		var op vm.Executer = nil
+		for _, parser := range parsers {
+			if op, _, err = parser.Parse(opName, line, lineNum); op != nil {
+				break
+			}
 		}
-		if op != nil {
+		if op == nil {
+			return nil, meta, fmt.Errorf("unknown opcode %s", opName)
+		} else if err != nil {
+			return nil, meta, err
+		} else {
 			program = append(program, op)
 		}
 
