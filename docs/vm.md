@@ -273,3 +273,83 @@ func (inst LoadMemory) Exec(vm Runner, st Stack, mem Memory){
     st.Push(mem.Load(int(inst)))
 }
 ```
+
+
+## Comparison with Haskell
+
+This is an excerpt from a Haskell implementation of the VM:
+
+```haskell
+type Label = Int
+data Instruction = Add | Zero Label | Jump Label
+type Code = [Instruction]
+
+pop :: Stack -> (Int,Stack)
+pop [] = error "Empty stack"
+pop (x:xs) = (x,xs)
+
+push :: Stack -> Int -> Stack
+push xs x = x:xs
+
+interp :: Code -> Code -> VM ()
+interp [] p = return ()
+
+interp (Add:next) p = do op1 <- popS 
+                         op2 <- popS
+                         pushS (op1 + op2)
+                         interp next p 
+
+interp ((Zero l):next) p = do v <- popS
+                              if v == 0 then interp ((Jump l):next) p
+                               else interp next p
+
+interp ((Jump l):next) p = interp (locate l p) p
+```
+
+In Haskell we use a data type to represent the types of the instructions and their 
+structure (parameter) as a sum of products of types 
+([algebraic type](https://wiki.haskell.org/Algebraic_data_type))
+A list of `Instruction` is a program.
+
+For the implementation of a stack the most elegant way is to use pattern matching 
+for the pop operation (separating the top from the rest) and the cons operator 
+for the push operation (adding on top of the stack). The functions `popS` and `pushS`
+apply `pop` and `push` on the VM stack as a side effect.
+
+The VM interpreter (runner) is implemented using 
+[pattern matching](https://en.wikipedia.org/wiki/Pattern_matching) 
+and [tail recursion](https://en.wikipedia.org/wiki/Tail_call). 
+The list of instructions (program) is treated as a stack which only implements pop
+and thus can only shrink. The top most instruction is the instruction to be executed.
+The pattern matching automatically selects the correct implementation according 
+to the type of the instruction. To handle the next instruction the interpreter 
+function is called as the last step in each implementation. This recursion is the 
+idiomatic way to iterate a list in haskell and is optimized by the compiler into 
+a normal loop.
+
+The virtual machine is a big state machine and each instruction exists for the sole 
+purpose of having, when executed, a side effect on the state of the machine. Normally 
+haskell does not allow such side effects. For this purpose we need to use 
+[a state monad](https://en.wikibooks.org/wiki/Haskell/Understanding_monads/State).
+The haskell code after the `do` keyword is executed sequencially and has side effects.
+
+In Haskell we cannot add new constructors (VM instructions) to a type (Instruction) 
+without modifying the code where the type is defined. 
+([see here](https://www.andres-loeh.de/OpenDatatypes.pdf))
+It is simple, however, to add a new function. This problem is known as the 
+[expression problem](https://en.wikipedia.org/wiki/Expression_problem).
+The problem describes exactly this challenge: being able to add new methods/functions
+just as easily as adding new representations (implemtation if the type) in a statically
+typed environment without resorting to runtime casts. Programming languages usually 
+prefer one or the other, but dot not provide good extensibility for both.
+
+In Go it is the other way around: it is difficult to add another method to an interface
+since all types then no logner implement the interface and thus any code relying on it 
+will no longer compile. However adding a new implementation of an interface is only the 
+matter of writing the required methods, which not even need to be part of the original
+package/module.
+
+For the extensibility of the VM, Go is the better host programming language, since 
+it is more likely that instructions are added than methods. For the abstract sytax 
+tree from which the vm code will be generated however, the situation is different:
+The AST nodes will need a bit from both.
