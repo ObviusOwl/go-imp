@@ -1,4 +1,4 @@
-# Virtual Machine
+# Virtual machine
 
 ## Stack based VM and hardware CPU
 
@@ -61,7 +61,7 @@ The instructions the VM can execute accept exactly zero or one parameter. This m
 implementing the instructions and the parser for the assembly language simple. It 
 also ensures that the stack based VM does not mutate into a direct interpreter of 
 the abstract syntax tree for IMP, which due to the learning nature of this project 
-is quite valable.
+is quite valuable.
 
 A hardware CPU uses, depending on it's architecture, registers and the system memory 
 to store the temporary results of computations (instructions). For example the 
@@ -155,14 +155,14 @@ Here is a simplified version of the VM implementation:
 
 ```go
 type Pusher interface {
-	Push(item interface{})
+    Push(item interface{})
 }
 type Poper interface {
-	Pop() (interface{}, error)
+    Pop() (interface{}, error)
 }
 type Stack interface {
-	Pusher
-	Poper
+    Pusher
+    Poper
 }
 
 type MapMemory map[int]DataValue
@@ -177,7 +177,7 @@ type Machine struct {
 }
 
 type Executer interface {
-    Exec(vm Runner, st stack.Stack, mem Memory)
+    Exec(vm Runner, st Stack, mem Memory)
 }
 type Program []Executer
 
@@ -219,7 +219,7 @@ Here is a simplified version of three instructions:
 
 ```go
 type JumpZero Label
-func (inst JumpZero) Exec(vm Runner, st stack.Stack, mem Memory){
+func (inst JumpZero) Exec(vm Runner, st Stack, mem Memory){
     item, _ := st.Pop()
     if value, ok := item.(int); ok && value != 0{
         vm.Jump(Label(inst))
@@ -227,10 +227,10 @@ func (inst JumpZero) Exec(vm Runner, st stack.Stack, mem Memory){
 }
 
 type Add struct{}
-func (inst Add) Exec(vm Runner, st stack.Stack, mem Memory){
-	item1, _ := st.Pop()
+func (inst Add) Exec(vm Runner, st Stack, mem Memory){
+    item1, _ := st.Pop()
     if op1, ok := item1.(int); ok{
-    	item2, _ := st.Pop()
+        item2, _ := st.Pop()
         if op2, ok := item1.(int); ok{
             st.Push(op1 + op2)
         }
@@ -238,7 +238,7 @@ func (inst Add) Exec(vm Runner, st stack.Stack, mem Memory){
 }
 
 type LoadMemory int
-func (inst LoadMemory) Exec(vm Runner, st stack.Stack, mem Memory){
-	st.Push(mem.Load(int(inst)))
+func (inst LoadMemory) Exec(vm Runner, st Stack, mem Memory){
+    st.Push(mem.Load(int(inst)))
 }
 ```

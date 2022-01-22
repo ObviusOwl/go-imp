@@ -1,4 +1,4 @@
-# IMP Assembly and instructions
+# IMP assembly and instructions
 
 Currently there exist two data types the VM can work with. Integers and strings.
 
