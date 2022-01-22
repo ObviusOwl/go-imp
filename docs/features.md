@@ -7,9 +7,9 @@ linked binary containing all library dependencies. This simplifies deployment an
 distribution. 
 
 The binary produced by this project can replicate itself while embedding a given 
-asembly file into the binary. When launched this new binary will automatically 
+asembly file into the binary. When launched, this new binary will automatically 
 run the embedded IMP program. Additionally the binary will make selected command 
-line arguments available from withing the IMP assembly program.
+line arguments available from within the IMP assembly program.
 
 This functionality was inspired by the two Stackoverflow posts 
 [how to add and use binary data to compiled executable](https://stackoverflow.com/questions/32437714/how-to-add-and-use-binary-data-to-compiled-executable)
@@ -17,28 +17,28 @@ and
 [accessing data appended to an elf binary](https://stackoverflow.com/questions/5660792/accessing-data-appended-to-an-elf-binary)
 
 The solutions was only tested on Linux and probably ony works there anyway.
-However with some more work a more platform independent version can be crafted.
+However with some more work, a more platform independent version can be crafted.
 
-One can append binary data to ELF binaries without breaking them. To embed an asembly 
-file, the application opens the currently running binary (itself) as read only 
-via following the link in `/proc/self/exe`. The content is copied into a new file.
-Then the assembly text file is copied appending to the file. The size in bytes of 
+One can append binary data to ELF binaries without breaking them. To embed an assembly 
+file, the application opens the currently running binary (itself) in read only mode  
+by following the link in `/proc/self/exe`. The content is copied into a new file.
+Then the assembly text file is copied, appending to the file. The size in bytes of 
 the assembly is recorded and is also appended to the new file. Finally a magic 
 string is appended.
 
-When the binary is launched, the application checks if the OS is linux and then 
+When the binary is launched, the application checks if the OS is Linux and then 
 opens the file `/proc/self/exe` for reading. If there is no magic string at the 
 end of the file, the application runs normally. If there is one, the assembly 
 file size is read and the assembly file is loaded using the size to seek to the 
 correcy offset. 
 
-After the embedded assembly was loaded, the command line argment parser is programmed 
+After the embedded assembly has been loaded, the command line argment parser is programmed 
 according to the metadata at the top of the assembly file. The arguments are parsed 
 and inserted at the specified VM memory addresses. Finally the VM is started with 
 the program.
 
 To be CPU independend the size of the assembly file is written in network byte order
-(big endian). Also a fixed width of 8Byte is used.
+(big endian). Also a fixed width of 8 Byte is used.
 
 The Header in the assembly file is a special comment syntax to specify the name,
 data type, target address and default value of the parameters.
@@ -65,8 +65,8 @@ The format is as follows:
 The parameter name is the name of the paramer on the command line. It is case sensitive.
 The address is the target address where to store the value. The type must be exactly one 
 of the both lower case values `str` or `int`. The default value must be of the type 
-declared in the type field. The same parsing rule applies as for string literals in the 
-assembly (double quoted and excaped string).
+declared in the type field. The same parsing rules apply as for string literals in the 
+assembly (double quoted and escaped string).
 
 To build the executable run (skip go build if already compiled):
 
